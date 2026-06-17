@@ -1,0 +1,101 @@
+services:
+  # ─────────────────────────────────────────────────────────────
+  # PostgreSQL — must be healthy before any other service starts
+  # ─────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-inventory}
+      POSTGRES_USER: ${POSTGRES_USER:-inventory_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme_db_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-inventory_app} -d ${POSTGRES_DB:-inventory}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ─────────────────────────────────────────────────────────────
+  # FastAPI AI Service — loads Isolation Forest model on startup
+  # ─────────────────────────────────────────────────────────────
+  ai-service:
+    build:
+      context: ./ai-core
+      dockerfile: Dockerfile
+    image: warehouse-pfe/ai:latest
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://readonly_user:changeme_readonly_pw@postgres:5432/inventory}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-qwen/qwen-2.5-72b-instruct}
+      OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
+      MODEL_PATH: ${MODEL_PATH:-/app/models/anomaly_model.pkl}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ─────────────────────────────────────────────────────────────
+  # Spring Boot Backend — Flyway migration on startup
+  # ─────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend-springboot
+      dockerfile: Dockerfile
+    image: warehouse-pfe/backend:latest
+    restart: unless-stopped
+    environment:
+      DB_URL: ${DB_URL:-jdbc:postgresql://postgres:5432/inventory}
+      DB_USERNAME: ${DB_USERNAME:-inventory_app}
+      DB_PASSWORD: ${DB_PASSWORD:-changeme_db_password}
+      JWT_SECRET: ${JWT_SECRET:-changeme_jwt_secret_minimum_256_bits_long_placeholder_value}
+      JWT_EXPIRY_MS: ${JWT_EXPIRY_MS:-900000}
+      JWT_REFRESH_EXPIRY_MS: ${JWT_REFRESH_EXPIRY_MS:-604800000}
+      AI_SERVICE_URL: ${AI_SERVICE_URL:-http://ai-service:8000}
+      AI_SERVICE_TIMEOUT_MS: ${AI_SERVICE_TIMEOUT_MS:-2000}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ai-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ─────────────────────────────────────────────────────────────
+  # React Frontend — no startup dependency on services
+  # ─────────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend-react
+      dockerfile: Dockerfile
+    image: warehouse-pfe/frontend:latest
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+
+networks:
+  default:
+    name: warehouse_net

@@ -839,22 +839,22 @@ Called by Spring Boot when an AI chat request arrives.
 ### 9.2 Project Structure
 
 ```
-warehouse-pfe/
+warehouse/
 ├── docker-compose.yml
 ├── .env.example                  # template for all env vars
 ├── db/
 │   └── migration/                # Flyway versioned SQL files
-├── backend-springboot/
+├── backend/
 │   ├── src/
 │   └── Dockerfile
-├── ai-python/
+├── ai-core/
 │   ├── models/                   # serialized .pkl files
 │   ├── src/
 │   └── Dockerfile
-├── frontend-react/
+├── frontend/
 │   ├── src/
 │   └── Dockerfile
-└── mobile-flutter/
+└── mobile/
     └── lib/
 ```
 
