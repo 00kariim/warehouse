@@ -14,6 +14,8 @@ from typing import Any, List, Optional
 import psycopg2
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage, SystemMessage
 
 from .config import settings
 
@@ -57,7 +59,6 @@ _llm = None  # Lazy-initialised to avoid import errors when key is missing
 def _get_llm():
     global _llm
     if _llm is None:
-        from langchain_openai import ChatOpenAI
         _llm = ChatOpenAI(
             model=settings.openrouter_model,
             openai_api_key=settings.openrouter_api_key,
@@ -118,8 +119,6 @@ def generate_query(body: QueryRequest) -> QueryResponse:
     llm = _get_llm()
 
     # Ask the LLM for a SQL query
-    from langchain_core.messages import HumanMessage, SystemMessage
-
     messages = [
         SystemMessage(content=SCHEMA_DDL),
         HumanMessage(

@@ -2,6 +2,7 @@ package com.warehouse.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -10,6 +11,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "anomaly_events")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class AnomalyEvent {
 
     @Id

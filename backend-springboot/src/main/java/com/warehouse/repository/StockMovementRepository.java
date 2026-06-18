@@ -16,12 +16,12 @@ public interface StockMovementRepository extends JpaRepository<StockMovement, UU
 
     @Query("""
         SELECT sm FROM StockMovement sm
-        WHERE (:productId IS NULL OR sm.product.id = :productId)
-          AND (:warehouseId IS NULL OR sm.warehouse.id = :warehouseId)
-          AND (:type IS NULL OR sm.type = :type)
-          AND (:anomalyOnly = FALSE OR sm.anomalyFlag = TRUE)
-          AND (:from IS NULL OR sm.timestamp >= :from)
-          AND (:to IS NULL OR sm.timestamp <= :to)
+        WHERE (CAST(:productId AS uuid) IS NULL OR sm.product.id = :productId)
+          AND (CAST(:warehouseId AS uuid) IS NULL OR sm.warehouse.id = :warehouseId)
+          AND (CAST(:type AS text) IS NULL OR sm.type = :type)
+          AND (CAST(:anomalyOnly AS boolean) = FALSE OR sm.anomalyFlag = TRUE)
+          AND (CAST(:from AS timestamp) IS NULL OR sm.timestamp >= :from)
+          AND (CAST(:to AS timestamp) IS NULL OR sm.timestamp <= :to)
         """)
     Page<StockMovement> findFiltered(
             @Param("productId") UUID productId,

@@ -21,5 +21,6 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     Optional<Product> findByIdForUpdate(UUID id);
 
     /** Low-stock filter for GET /api/products?low_stock=true */
+    @Query("SELECT p FROM Product p WHERE p.currentStock < p.minStock")
     Page<Product> findByCurrentStockLessThanMinStock(Pageable pageable);
 }
