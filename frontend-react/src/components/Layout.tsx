@@ -15,7 +15,10 @@ import SmartToyIcon from '@mui/icons-material/SmartToy'
 import PeopleIcon from '@mui/icons-material/People'
 import LogoutIcon from '@mui/icons-material/Logout'
 import MenuIcon from '@mui/icons-material/Menu'
+import DarkModeIcon from '@mui/icons-material/DarkMode'
+import LightModeIcon from '@mui/icons-material/LightMode'
 import { useAuth } from '../contexts/AuthContext'
+import { useThemeMode } from '../contexts/ThemeContext'
 
 const DRAWER_WIDTH = 240
 
@@ -45,6 +48,7 @@ const ROLE_COLOR: Record<string, 'success' | 'info' | 'default'> = {
 
 const Layout: React.FC = () => {
   const { role, username, logout } = useAuth()
+  const { mode, toggleTheme } = useThemeMode()
   const navigate = useNavigate()
   const location = useLocation()
   const muiTheme = useMuiTheme()
@@ -100,6 +104,11 @@ const Layout: React.FC = () => {
           <Typography variant="body2" noWrap fontWeight={600}>{username}</Typography>
           <Chip label={role} size="small" color={ROLE_COLOR[role ?? ''] ?? 'default'} sx={{ height: 18, fontSize: '0.65rem' }} />
         </Box>
+        <Tooltip title={mode === 'dark' ? 'Light Mode' : 'Dark Mode'}>
+          <IconButton size="small" onClick={toggleTheme} sx={{ color: 'text.secondary' }}>
+            {mode === 'dark' ? <LightModeIcon fontSize="small" /> : <DarkModeIcon fontSize="small" />}
+          </IconButton>
+        </Tooltip>
         <Tooltip title="Logout">
           <IconButton size="small" onClick={logout} sx={{ color: 'text.secondary' }}>
             <LogoutIcon fontSize="small" />
