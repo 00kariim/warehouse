@@ -49,7 +49,7 @@ public class ProductController {
             @RequestParam(defaultValue = "false") boolean low_stock,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "created_at,desc") String sort) {
+            @RequestParam(defaultValue = "createdAt,desc") String sort) {
         Pageable pageable = buildPageable(page, size, sort);
         return ResponseEntity.ok(PageResponse.of(productService.findAll(low_stock, pageable)));
     }

@@ -36,7 +36,7 @@ public class WarehouseController {
             @RequestParam(required = false) String name,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "created_at,desc") String sort) {
+            @RequestParam(defaultValue = "createdAt,desc") String sort) {
         String[] parts = sort.split(",");
         Sort.Direction dir = parts.length > 1 && "asc".equalsIgnoreCase(parts[1]) ? Sort.Direction.ASC : Sort.Direction.DESC;
         var pageable = PageRequest.of(page, Math.min(size, 100), Sort.by(dir, parts[0]));
