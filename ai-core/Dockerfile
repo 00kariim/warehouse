@@ -3,9 +3,10 @@ FROM python:3.12-slim AS builder
 
 WORKDIR /build
 COPY requirements.txt .
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+# Install to default site-packages so seed_model.py can import numpy/sklearn
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Pre-train the Isolation Forest so the model file exists at image build time
+# Pre-train the Isolation Forest — packages are on Python's default path now
 COPY seed_model.py .
 RUN python seed_model.py
 
@@ -14,10 +15,11 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Copy installed packages
-COPY --from=builder /install /usr/local
+# Fresh install for the runtime image
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy pre-trained model
+# Copy pre-trained model from builder
 COPY --from=builder /build/models /app/models
 
 # Copy application source
