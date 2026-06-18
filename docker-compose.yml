@@ -14,7 +14,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-inventory_app} -d ${POSTGRES_DB:-inventory}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-inventory_app} -d ${POSTGRES_DB:-inventory}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -27,6 +27,7 @@ services:
     build:
       context: ./ai-core
       dockerfile: Dockerfile
+      network: host
     image: warehouse-pfe/ai:latest
     restart: unless-stopped
     environment:
@@ -41,7 +42,7 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -54,6 +55,7 @@ services:
     build:
       context: ./backend-springboot
       dockerfile: Dockerfile
+      network: host
     image: warehouse-pfe/backend:latest
     restart: unless-stopped
     environment:
@@ -73,7 +75,7 @@ services:
       ai-service:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      test: [ "CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1" ]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -86,8 +88,16 @@ services:
     build:
       context: ./frontend-react
       dockerfile: Dockerfile
+      network: host
+      extra_hosts:
+        - "files.pythonhosted.org:151.101.64.223"
+        - "pypi.org:151.101.192.223"
+        - "auth.docker.io:104.18.43.178"
+        - "registry-1.docker.io:44.219.124.8"
     image: warehouse-pfe/frontend:latest
     restart: unless-stopped
+    environment:
+      API_TARGET: http://backend:8080
     ports:
       - "3000:3000"
     depends_on:

@@ -2,14 +2,13 @@ package com.warehouse.client;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -27,14 +26,13 @@ public class AiServiceClient {
     private final String aiServiceUrl;
 
     public AiServiceClient(
-            RestTemplateBuilder builder,
             @Value("${app.ai-service.url}") String aiServiceUrl,
-            @Value("${app.ai-service.timeout-ms}") long timeoutMs) {
+            @Value("${app.ai-service.timeout-ms}") int timeoutMs) {
         this.aiServiceUrl = aiServiceUrl;
-        this.restTemplate = builder
-                .connectTimeout(Duration.ofMillis(timeoutMs))
-                .readTimeout(Duration.ofMillis(timeoutMs))
-                .build();
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(timeoutMs);
+        factory.setReadTimeout(timeoutMs);
+        this.restTemplate = new RestTemplate(factory);
     }
 
     /**
